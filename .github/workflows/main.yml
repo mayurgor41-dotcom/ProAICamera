@@ -1,0 +1,47 @@
+name: Build ProAICamera APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Unzip Uploaded Source Code
+        run: |
+          unzip -o "*.zip"
+          if [ -d "ProAICamera" ] && [ ! -f "settings.gradle.kts" ]; then
+            cp -r ProAICamera/* .
+          fi
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle 8.9
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.9'
+
+      - name: Compile Debug & Release APKs
+        run: gradle assembleDebug assembleRelease --stacktrace
+
+      - name: Upload Ready-to-Install Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ProAICamera-Debug-APK
+          path: app/build/outputs/apk/debug/*.apk
+
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ProAICamera-Release-APK
+          path: app/build/outputs/apk/release/*.apk
+          
